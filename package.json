@@ -1,0 +1,19 @@
+{
+  "name": "rivoshoppa-backend",
+  "version": "1.0.0",
+  "description": "Rivoshoppa API — handles quote requests and delivery status",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.19.2",
+    "nodemailer": "^6.9.16",
+    "twilio": "^5.4.0"
+  }
+}

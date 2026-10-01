@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Support — Rivoshoppa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav__inner">
+    <a href="index.html" class="logo">
+      <span class="logo__mark" aria-hidden="true"></span>
+      Rivoshoppa
+    </a>
+    <nav class="nav__links">
+      <a href="index.html">Home</a>
+      <a href="index.html#shopping">Marketplace</a>
+      <a href="cart.html">Book a delivery</a>
+      <a href="track.html">Track order</a>
+      <a href="support.html">Support</a>
+    </nav>
+    <div class="nav__actions">
+      <a href="track.html" class="btn btn--small btn--ghost">Track order</a>
+      <a href="cart.html" class="btn btn--small">Book a delivery</a>
+    </div>
+  </div>
+</header>
+
+<main class="section support-hero">
+  <div class="support-hero__content">
+    <p class="eyebrow">We're here to help</p>
+    <h1>Customer Support</h1>
+    <p class="hero__sub">Have a question or need assistance? Our support team is available 24/7 through multiple channels. Choose the one that works best for you.</p>
+  </div>
+</main>
+
+<!-- CONTACT METHODS -->
+<section class="section support-channels">
+  <div class="channels-grid">
+    
+    <!-- WhatsApp -->
+    <div class="contact-card">
+      <div class="contact-icon">💬</div>
+      <h3>WhatsApp</h3>
+      <p>Chat instantly with our support team</p>
+      <div class="contact-details">
+        <p class="contact-number">0783867068</p>
+        <p class="contact-note">Available 24/7 for quick responses</p>
+      </div>
+      <a href="https://wa.me/250783867068" target="_blank" class="contact-btn">
+        <span>Chat on WhatsApp</span>
+      </a>
+    </div>
+
+    <!-- Email -->
+    <div class="contact-card">
+      <div class="contact-icon">📧</div>
+      <h3>Email</h3>
+      <p>Send us detailed information</p>
+      <div class="contact-details">
+        <p class="contact-email">zenvyrasafesend1@gmail.com</p>
+        <p class="contact-note">Response within 2-4 hours</p>
+      </div>
+      <a href="mailto:zenvyrasafesend1@gmail.com" class="contact-btn">
+        <span>Send Email</span>
+      </a>
+    </div>
+
+    <!-- Phone -->
+    <div class="contact-card">
+      <div class="contact-icon">📞</div>
+      <h3>Phone Call</h3>
+      <p>Talk directly with our team</p>
+      <div class="contact-details">
+        <p class="contact-number">0783867068</p>
+        <p class="contact-note">Mon-Sun: 6:00 AM - 10:00 PM</p>
+      </div>
+      <a href="tel:0783867068" class="contact-btn">
+        <span>Call Us</span>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<!-- FAQ SECTION -->
+<section class="section support-faq">
+  <h2>Frequently Asked Questions</h2>
+  <div class="faq-grid">
+    
+    <details class="faq-item">
+      <summary>How long does a delivery take?</summary>
+      <div class="faq-content">
+        <p>Standard deliveries typically arrive within 24 hours. Express deliveries are completed within 2 hours. Delivery times depend on location and current demand.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>What's your cancellation policy?</summary>
+      <div class="faq-content">
+        <p>You can cancel orders up to 30 minutes after placing them for a full refund. After that, a 10% cancellation fee applies. Contact support for special cases.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>How do I follow up on my order?</summary>
+      <div class="faq-content">
+        <p>Contact our support team directly and we'll help you with updates, delays, or any questions about your delivery.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>Is my package insured?</summary>
+      <div class="faq-content">
+        <p>Standard insurance is included for packages up to 50,000 RWF. For higher value items, consider our premium protection plan at checkout.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>Can I schedule a delivery in advance?</summary>
+      <div class="faq-content">
+        <p>Yes! You can schedule deliveries up to 7 days in advance. Select your preferred date and time during checkout. Scheduled deliveries have a small additional fee.</p>
+      </div>
+    </details>
+
+    <details class="faq-item">
+      <summary>What payment methods do you accept?</summary>
+      <div class="faq-content">
+        <p>We accept Mobile Money (MTN, Airtel), Credit/Debit cards, and Bank Transfers. All payments are secure and encrypted.</p>
+      </div>
+    </details>
+
+  </div>
+</section>
+
+<!-- CONTACT FORM MODAL -->
+<div id="contactFormModal" class="modal hidden">
+  <div class="modal-content">
+    <button class="modal-close" onclick="toggleContactForm()">&times;</button>
+    <h2>Send us a Message</h2>
+    <form id="supportForm" class="support-form">
+      <div class="field">
+        <label for="name">Your Name</label>
+        <input id="name" type="text" required placeholder="Amara Uwase">
+      </div>
+      <div class="field">
+        <label for="email">Email Address</label>
+        <input id="email" type="email" required placeholder="amara@example.com">
+      </div>
+      <div class="field">
+        <label for="phone">Phone Number</label>
+        <input id="phone" type="tel" placeholder="+250 788 456 789">
+      </div>
+      <div class="field">
+        <label for="subject">Subject</label>
+        <select id="subject" required>
+          <option value="">Select a subject...</option>
+          <option value="delivery_issue">Delivery Issue</option>
+          <option value="payment_issue">Payment Issue</option>
+          <option value="account_issue">Account Issue</option>
+          <option value="feedback">Feedback</option>
+          <option value="partnership">Partnership Inquiry</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="field field--full">
+        <label for="message">Message</label>
+        <textarea id="message" required placeholder="Tell us how we can help..." rows="5"></textarea>
+      </div>
+      <div class="field form-status" id="formStatus"></div>
+      <button type="submit" class="btn btn--primary" style="width:100%;">Send Message</button>
+    </form>
+  </div>
+</div>
+
+<!-- OFFICE LOCATIONS -->
+<section class="section support-locations">
+  <h2>Our Office</h2>
+  <div class="locations-grid">
+    <div class="location-card">
+      <h3>📍 Headquarters - Kigali</h3>
+      <p>Rivoshoppa HQ<br>
+      Kigali Central Business District<br>
+      Kigali, Rwanda</p>
+      <p><strong>Phone:</strong> 0783867068<br>
+      <strong>Email:</strong> zenvyrasafesend1@gmail.com</p>
+    </div>
+    <div class="location-card">
+      <h3>⏰ Business Hours</h3>
+      <p><strong>Monday - Friday:</strong> 6:00 AM - 10:00 PM<br>
+      <strong>Saturday:</strong> 8:00 AM - 8:00 PM<br>
+      <strong>Sunday:</strong> 8:00 AM - 6:00 PM</p>
+      <p style="margin-top:16px; color:#41dc8b;">Emergency support available 24/7 via WhatsApp</p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer__inner">
+    <p>&copy; 2024 Rivoshoppa. All rights reserved.</p>
+    <p><a href="index.html">Home</a> • <a href="support.html">Support</a> • <a href="#">Privacy</a> • <a href="#">Terms</a></p>
+  </div>
+</footer>
+
+<script>
+function toggleContactForm() {
+  const modal = document.getElementById('contactFormModal');
+  modal.classList.toggle('hidden');
+}
+
+document.getElementById('supportForm')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const status = document.getElementById('formStatus');
+  status.textContent = 'Sending...';
+  status.setAttribute('data-state', 'pending');
+
+  // Simulate form submission
+  setTimeout(() => {
+    status.textContent = '✓ Message sent successfully! We\'ll be in touch soon.';
+    status.setAttribute('data-state', 'success');
+    document.getElementById('supportForm').reset();
+    
+    setTimeout(() => {
+      toggleContactForm();
+      status.textContent = '';
+    }, 2000);
+  }, 1000);
+});
+
+// Close modal when clicking outside
+document.getElementById('contactFormModal')?.addEventListener('click', (e) => {
+  if (e.target.id === 'contactFormModal') {
+    toggleContactForm();
+  }
+});
+</script>
+
+</body>
+</html>

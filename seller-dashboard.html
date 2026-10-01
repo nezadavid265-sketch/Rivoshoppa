@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seller Dashboard — Rivoshoppa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="api-config.js"></script>
+<style>
+.seller-shell{max-width:1180px;margin:auto;padding:40px 20px 70px}.seller-top{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:30px}.seller-card{background:#fff;border:1px solid #cbd5e1;border-radius:18px;padding:22px;margin-bottom:22px;box-shadow:0 8px 28px rgba(0,0,0,.12);color:#172033}.seller-card h2,.seller-card h3{color:#172033}.seller-card p,.seller-card .muted{color:#475467}.seller-card .field label{color:#344054}.seller-card .field input,.seller-card .field select,.seller-card .field textarea,.product-row input,.product-row textarea{background:#fff;color:#172033;border:1px solid #98a2b3}.seller-card input::placeholder,.seller-card textarea::placeholder,.product-row input::placeholder,.product-row textarea::placeholder{color:#667085;opacity:1}.seller-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.product-row{border:1px solid #cbd5e1;border-radius:10px;padding:14px;margin-top:12px;background:#f8fafc}.product-grid{display:grid;grid-template-columns:1fr 120px 1.5fr;gap:10px}.seller-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.seller-status{padding:7px 10px;border-radius:999px;background:#dbeafe;color:#1e40af;font-size:.82rem;font-weight:600}.product-remove{margin-top:8px}.muted{color:#667085}.shop-title{display:flex;justify-content:space-between;gap:15px;align-items:center}@media(max-width:760px){.seller-grid,.product-grid{grid-template-columns:1fr}.seller-top{align-items:flex-start;flex-direction:column}}
+.seller-image-upload{display:grid;grid-template-columns:minmax(0,1fr) 88px;gap:12px;align-items:end;margin-top:10px}.seller-image-upload img{width:88px;height:66px;object-fit:cover;border:1px solid #cbd5e1;border-radius:8px}.seller-image-upload img[hidden]{display:none}
+.seller-card .btn--ghost{background:#f1f5f9;color:#1e293b;border-color:#94a3b8;backdrop-filter:none}.seller-card .btn--ghost:hover{background:#e2e8f0;color:#0f172a;border-color:#475569}.seller-card .btn--primary{color:#fff}
+</style></head>
+<body>
+<header class="nav"><div class="nav__inner"><div class="logo"><span class="logo__mark"></span> Rivoshoppa seller</div><div class="nav__actions"><a class="btn btn--small btn--ghost" href="index.html">Store</a><button class="btn btn--small btn--ghost" id="logout">Log out</button></div></div></header>
+<main class="seller-shell">
+<div class="seller-top"><div><p class="eyebrow">Seller dashboard</p><h1 id="welcome">My shop</h1><p class="muted">Edit your shop details, add products, update prices and remove products. Changes are saved to the server.</p></div><span class="seller-status" id="accountStatus">Active</span></div>
+<div id="message" class="form-status"></div>
+<div id="shops"></div>
+<div class="seller-card"><h2>Create another shop</h2><p class="muted">You can operate more than one shop from the same seller account.</p><button class="btn btn--primary" id="newShop">Create shop</button></div>
+</main>
+<script>
+const API_BASE=window.RivoshoppaApiBase;
+const TOKEN_KEY='rivoshoppa_seller_token', token=sessionStorage.getItem(TOKEN_KEY);
+if(!token) location.href='seller-login.html';
+const headers=()=>({'Content-Type':'application/json','Authorization':'Bearer '+sessionStorage.getItem(TOKEN_KEY)});
+async function readJson(response){const text=await response.text();try{return text?JSON.parse(text):{};}catch{throw new Error(`Server returned ${response.status} without a valid response.`);}}
+let shops=[];
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const msg=(t,ok=false)=>{const e=document.getElementById('message');e.textContent=t;e.dataset.state=ok?'success':'error';};
+function productRow(p,i){return `<div class="product-row" data-product="${i}" data-original-id="${esc(p.id||'')}">
+<div class="product-grid">
+<input data-field="name" value="${esc(p.name)}" placeholder="Product name">
+<input data-field="priceValue" type="number" min="0" value="${Number(p.priceValue||0)}" placeholder="Price">
+<input data-field="image" value="${esc(p.image||'')}" placeholder="Product image URL">
+</div>
+<div class="seller-image-upload"><div class="field"><label>Upload product image</label><input data-product-image type="file" accept="image/*" capture="environment"></div><img data-product-preview src="${esc(p.image||'')}" alt="Product image preview" ${p.image?'':'hidden'}></div>
+<textarea data-field="description" style="width:100%;margin-top:10px" placeholder="Description">${esc(p.description||'')}</textarea>
+<button class="btn btn--small btn--ghost product-remove" type="button" data-remove="${i}">Remove product</button>
+</div>`}
+function shopCard(shop){
+return `<section class="seller-card" data-shop="${esc(shop.id)}">
+<div class="shop-title"><div><h2>${esc(shop.name||'Your shop')}</h2><p class="muted">Shop ID: ${esc(shop.id)}</p></div><span class="seller-status">${esc(shop.status||'active')}</span></div>
+<div class="seller-grid" style="margin-top:16px">
+<div class="field"><label>Shop name</label><input data-shop-field="name" value="${esc(shop.name)}"></div>
+<div class="field"><label>Category</label><input data-shop-field="category" value="${esc(shop.category)}"></div>
+<div class="field"><label>Location</label><input data-shop-field="location" value="${esc(shop.location)}"></div>
+<div class="field"><label>Shop image URL</label><input data-shop-field="image" value="${esc(shop.image||'')}"><div class="seller-image-upload"><div class="field"><label>Upload from device</label><input data-shop-image type="file" accept="image/*" capture="environment"></div><img data-shop-image-preview src="${esc(shop.image||'')}" alt="Shop image preview" ${shop.image?'':'hidden'}></div></div>
+</div>
+<div class="field" style="margin-top:14px"><label>Description</label><textarea data-shop-field="description">${esc(shop.description||'')}</textarea></div>
+<div style="margin-top:22px"><div class="shop-title"><h3>Products (${(shop.products||[]).length})</h3><button class="btn btn--small btn--primary" type="button" data-add-product>+ Add product</button></div>
+<div data-products>${(shop.products||[]).map(productRow).join('') || '<p class="muted">No products yet. Add your first product.</p>'}</div></div>
+<div class="seller-actions"><button class="btn btn--primary" data-save>Save shop & products</button><button class="btn btn--ghost" data-delete>Delete shop</button></div>
+</section>`}
+function render(){document.getElementById('shops').innerHTML=shops.length?shops.map(shopCard).join(''):'<div class="seller-card"><h2>No shops yet</h2><p class="muted">Create your first shop to start selling.</p></div>';bind();}
+function collect(card){
+ const products=[...card.querySelectorAll('[data-product]')].map(row=>({id:row.dataset.originalId||undefined,name:row.querySelector('[data-field="name"]').value.trim(),priceValue:Number(row.querySelector('[data-field="priceValue"]').value||0),price:`${Number(row.querySelector('[data-field="priceValue"]').value||0).toLocaleString()} RWF`,description:row.querySelector('[data-field="description"]').value.trim(),image:row.querySelector('[data-field="image"]').value.trim()}));
+ return {name:card.querySelector('[data-shop-field="name"]').value.trim(),category:card.querySelector('[data-shop-field="category"]').value.trim(),location:card.querySelector('[data-shop-field="location"]').value.trim(),image:card.querySelector('[data-shop-field="image"]').value.trim(),description:card.querySelector('[data-shop-field="description"]').value.trim(),products};
+}
+function resizeImage(file){
+ return new Promise((resolve,reject)=>{
+  if(!file.type.startsWith('image/')){reject(new Error('Choose an image file.'));return;}
+  const reader=new FileReader();
+  reader.onerror=()=>reject(new Error('The image could not be read.'));
+  reader.onload=()=>{
+   const image=new Image();
+   image.onerror=()=>reject(new Error('The selected file is not a valid image.'));
+   image.onload=()=>{
+	const maxSize=1200,scale=Math.min(1,maxSize/Math.max(image.width,image.height));
+	const canvas=document.createElement('canvas');
+	canvas.width=Math.max(1,Math.round(image.width*scale));
+	canvas.height=Math.max(1,Math.round(image.height*scale));
+	const context=canvas.getContext('2d');
+	if(!context){reject(new Error('Your browser cannot prepare this image.'));return;}
+	context.fillStyle='#ffffff';context.fillRect(0,0,canvas.width,canvas.height);
+	context.drawImage(image,0,0,canvas.width,canvas.height);
+	const dataUrl=canvas.toDataURL('image/jpeg',0.76);
+	if(dataUrl.length>1.5*1024*1024){reject(new Error('This image is too large after resizing. Choose a smaller image.'));return;}
+	resolve(dataUrl);
+   };
+   image.src=reader.result;
+  };
+  reader.readAsDataURL(file);
+ });
+}
+function bind(){
+ document.querySelectorAll('[data-add-product]').forEach(b=>b.onclick=()=>{const card=b.closest('[data-shop]');const wrap=card.querySelector('[data-products]');const row=document.createElement('div');row.innerHTML=productRow({name:'',priceValue:0,description:'',image:''},0).replace('data-product="0"','data-product="new"');wrap.appendChild(row.firstElementChild);wrap.lastElementChild.querySelector('[data-field="name"]').focus();});
+ document.querySelectorAll('[data-products]').forEach(w=>w.addEventListener('click',e=>{const b=e.target.closest('[data-remove]');if(b){b.closest('.product-row').remove();}}));
+ document.querySelectorAll('[data-shop]').forEach(card=>{
+  card.addEventListener('change',async event=>{
+   const input=event.target;
+   if(!input.matches('[data-shop-image],[data-product-image]'))return;
+   const file=input.files&&input.files[0];
+   if(!file)return;
+   card.dataset.imageProcessing='true';
+   try{
+	const dataUrl=await resizeImage(file);
+	const productRow=input.closest('[data-product]');
+	const target=productRow?productRow.querySelector('[data-field="image"]'):card.querySelector('[data-shop-field="image"]');
+	const preview=productRow?productRow.querySelector('[data-product-preview]'):card.querySelector('[data-shop-image-preview]');
+	target.value=dataUrl;preview.src=dataUrl;preview.hidden=false;
+	msg(`${file.name} is ready. Save the shop to upload it.`,true);
+   }catch(error){input.value='';msg(error.message);}
+   finally{delete card.dataset.imageProcessing;}
+  });
+  card.addEventListener('input',event=>{
+   const input=event.target;
+   const productRow=input.closest('[data-product]');
+   const preview=productRow?productRow.querySelector('[data-product-preview]'):card.querySelector('[data-shop-image-preview]');
+   if(input.matches('[data-field="image"],[data-shop-field="image"]')){preview.src=input.value;preview.hidden=!input.value;}
+  });
+ });
+ document.querySelectorAll('[data-save]').forEach(b=>b.onclick=async()=>{const card=b.closest('[data-shop]');const id=card.dataset.shop;b.disabled=true;b.textContent='Saving...';try{if(card.dataset.imageProcessing)throw new Error('Wait for the image upload to finish.');const payload=collect(card);if(new Blob([JSON.stringify(payload)]).size>4*1024*1024)throw new Error('Images are too large to save together. Choose smaller images or remove some.');const r=await fetch(`${API_BASE}/api/seller/shops/`+encodeURIComponent(id),{method:'PUT',headers:headers(),body:JSON.stringify(payload)});const d=await readJson(r);if(!r.ok)throw new Error(d.error||'Save failed.');shops=shops.map(s=>s.id===id?d:s);render();msg('Shop and products saved successfully.',true);}catch(e){msg(e.message)}finally{b.disabled=false;}});
+ document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=async()=>{const card=b.closest('[data-shop]');if(!confirm('Delete this shop and all its products?'))return;const r=await fetch(`${API_BASE}/api/seller/shops/`+encodeURIComponent(card.dataset.shop),{method:'DELETE',headers:headers()});const d=await readJson(r);if(!r.ok){msg(d.error||'Delete failed');return;}shops=shops.filter(s=>s.id!==card.dataset.shop);render();msg('Shop deleted.',true);});
+}
+async function load(){try{const me=await fetch(`${API_BASE}/api/seller/me`,{headers:headers()});if(!me.ok)throw new Error('Your seller session has expired.');const seller=await readJson(me);document.getElementById('welcome').textContent='Welcome, '+seller.businessName;document.getElementById('accountStatus').textContent=seller.status;const r=await fetch(`${API_BASE}/api/seller/shops`,{headers:headers()});const d=await readJson(r);if(!r.ok)throw new Error(d.error||'Could not load shops.');shops=d;render();}catch(e){sessionStorage.removeItem(TOKEN_KEY);location.href='seller-login.html';}}
+document.getElementById('newShop').onclick=async()=>{const r=await fetch(`${API_BASE}/api/seller/shops`,{method:'POST',headers:headers(),body:JSON.stringify({name:'New Shop',category:'General',location:'Kigali',description:'',image:'',products:[]})});const d=await readJson(r);if(!r.ok){msg(d.error||'Could not create shop');return;}shops.push(d);render();msg('New shop created. Add products and save.',true);};
+document.getElementById('logout').onclick=async()=>{await fetch(`${API_BASE}/api/seller/logout`,{method:'POST',headers:headers()}).catch(()=>{});sessionStorage.removeItem(TOKEN_KEY);sessionStorage.removeItem('rivoshoppa_seller');location.href='seller-login.html';};
+load();
+</script></body></html>

@@ -1,0 +1,44 @@
+[
+  {
+    "id": "SELLER-1790702282395-PVPL71",
+    "ownerName": "NGUWENEZA",
+    "businessName": "ER elecronics",
+    "email": "nezadavid265@gmail.com",
+    "phone": "+250791322129",
+    "location": "Kigali",
+    "category": "electronics",
+    "status": "active",
+    "passwordHash": "scrypt:521a9d3b2ca16c2d74af99f5862dc86c:d7bf56d6ab4d0170db2e9ecc98152b42bc5fdf4ac0b7233bdd06a9a442a6019a458e81d4afbc523dd2c9f8d34178047116e8dccceb31c468cf9edbc2365c7eef",
+    "createdAt": "2026-09-29T17:18:02.571Z",
+    "updatedAt": "2026-09-29T17:20:08.829Z",
+    "lastLoginAt": "2026-09-29T18:06:25.794Z"
+  },
+  {
+    "id": "SELLER-1790705308909-Q675LU",
+    "ownerName": "NGUWENEZA",
+    "businessName": "eR tools",
+    "email": "nguweneza@gmail.com",
+    "phone": "0788660993",
+    "location": "Kigali",
+    "category": "electronics",
+    "status": "active",
+    "passwordHash": "scrypt:2b331a7bdc8f20f7ac94739aac2afbab:ace97b0f1677d5965ca1081a67819a2ed23b48b4f27e55d14a8ef903bac0099c54d6d4f3b81916c91130451450cad23b95794cc8572817f3d9bf918c5be7a01a",
+    "createdAt": "2026-09-29T18:08:29.082Z",
+    "updatedAt": "2026-09-29T18:09:20.069Z",
+    "lastLoginAt": "2026-09-30T07:56:44.322Z"
+  },
+  {
+    "id": "SELLER-1790755197364-UMFKUM",
+    "ownerName": "saint",
+    "businessName": "nextadventure",
+    "email": "saint@gmail.com",
+    "phone": "0793022279",
+    "location": "gasabo",
+    "category": "electronic",
+    "status": "active",
+    "passwordHash": "scrypt:adee3cc9a379206fc18f01c469a300f0:c7b645fb175db68053d003cc4bb01ede453201d5927f4f76d43ba054171ce258180e72246a1d0e1c58a76df8a3b3b84ec111cb0c04b58d718d43f3d10844994f",
+    "createdAt": "2026-09-30T07:59:57.507Z",
+    "updatedAt": "2026-09-30T08:05:25.301Z",
+    "lastLoginAt": "2026-10-01T06:15:44.707Z"
+  }
+]

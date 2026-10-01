@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin login — Rivoshoppa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<main class="login-screen">
+  <div class="login-card">
+    <div class="logo" style="margin-bottom:24px">
+      <span class="logo__mark" aria-hidden="true"></span>
+      Rivoshoppa admin
+    </div>
+    <p class="eyebrow">Restricted access</p>
+    <h1 style="font-size:1.6rem">Log in</h1>
+
+    <div style="margin-bottom: 16px; text-align: center;">
+      <a class="btn btn--small btn--ghost" href="index.html">Back to home</a>
+    </div>
+
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" required autocomplete="username" placeholder="admin">
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn btn--primary" style="width:100%; margin-top:22px" id="loginBtn">Log in</button>
+      <p class="form-status" id="loginStatus" role="status" aria-live="polite"></p>
+    </form>
+
+    <p class="login-hint">Demo credentials: <code>admin</code> / <code>safesend123</code> — change these in the backend's environment variables before going live.</p>
+  </div>
+</main>
+
+<script>
+const API_CANDIDATES = Array.from(new Set([
+  /^https?:$/.test(window.location.protocol) ? window.location.origin : "",
+  /^https?:$/.test(window.location.protocol) && window.location.hostname
+    ? `${window.location.protocol}//${window.location.hostname}:4000`
+    : "",
+  "http://localhost:4000",
+].filter(Boolean)));
+
+const form = document.getElementById("loginForm");
+const status = document.getElementById("loginStatus");
+const btn = document.getElementById("loginBtn");
+const params = new URLSearchParams(window.location.search);
+const autoLogin = params.get("autologin") === "1";
+
+function redirectAfterLogin() {
+  const returnTo = sessionStorage.getItem("safesend_admin_return");
+  sessionStorage.removeItem("safesend_admin_return");
+  window.location.href = returnTo || "admin-dashboard.html";
+}
+
+if (sessionStorage.getItem("safesend_admin_token")) {
+  redirectAfterLogin();
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  btn.disabled = true;
+  btn.textContent = "Logging in...";
+  status.textContent = "";
+  status.removeAttribute("data-state");
+
+  try {
+    const username = form.username.value.trim();
+    const password = form.password.value;
+    let response = null;
+    let lastError = null;
+    for (const apiBase of API_CANDIDATES) {
+      try {
+        const candidate = await fetch(`${apiBase}/api/admin/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+        if (candidate.status === 404 || candidate.status === 405) {
+          continue;
+        }
+        response = { apiBase, candidate };
+        break;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (!response) {
+      throw lastError || new Error("The admin API is unavailable. Start the backend with `npm start` and try again.");
+    }
+
+    const responseText = await response.candidate.text();
+    let data = {};
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch {
+      data = {};
+    }
+    if (!response.candidate.ok) {
+      throw new Error(data.error || `Login failed (server returned ${response.candidate.status}).`);
+    }
+    if (!data.token) throw new Error("The server did not return an admin token.");
+
+    sessionStorage.setItem("safesend_api_base", response.apiBase);
+    sessionStorage.setItem("safesend_admin_token", data.token);
+    redirectAfterLogin();
+  } catch (err) {
+    status.textContent = err.message;
+    status.setAttribute("data-state", "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Log in";
+  }
+});
+
+if (autoLogin) {
+  form.username.value = "admin";
+  form.password.value = "safesend123";
+  form.requestSubmit();
+}
+</script>
+</body>
+</html>

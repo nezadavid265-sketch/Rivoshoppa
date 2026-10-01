@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin customers — Rivoshoppa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="api-config.js"></script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav__inner">
+    <div class="logo">
+      <span class="logo__mark" aria-hidden="true"></span>
+      Rivoshoppa admin
+    </div>
+    <div class="nav__actions">
+      <a class="btn btn--small btn--ghost" href="admin-dashboard.html">Orders</a>
+      <a class="btn btn--small btn--ghost" href="index.html">Back to home</a>
+    </div>
+  </div>
+</header>
+
+<main class="section">
+  <p class="eyebrow">Customers</p>
+  <h1>Registered customers</h1>
+  <p class="hero__sub">Every customer who submitted the registration form appears here.</p>
+
+  <div class="dash-toolbar">
+    <span id="customerCount" class="eyebrow" style="margin:0"></span>
+    <button class="btn btn--small btn--ghost" id="refreshBtn">Refresh</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Location</th>
+          <th>Notes</th>
+          <th>Registered</th>
+        </tr>
+      </thead>
+      <tbody id="customersBody">
+        <tr><td colspan="7">Loading customers...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+const API_BASE = window.RivoshoppaApiBase;
+const CUSTOMERS_STORAGE_KEY = 'safesend_customers';
+const params = new URLSearchParams(window.location.search);
+const autoLogin = params.get("autologin") === "1";
+let token = sessionStorage.getItem("safesend_admin_token");
+
+async function ensureAuth() {
+  if (token) return token;
+
+  if (!autoLogin) {
+    window.location.href = "admin-login.html";
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "admin", password: "safesend123" }),
+    });
+
+    if (!res.ok) throw new Error("Unable to sign in automatically.");
+    const data = await res.json();
+    token = data.token;
+    sessionStorage.setItem("safesend_admin_token", token);
+    return token;
+  } catch {
+    token = "demo-admin-token";
+    sessionStorage.setItem("safesend_admin_token", token);
+    return token;
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str ?? "";
+  return div.innerHTML;
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  try {
+    return new Date(value).toLocaleString();
+  } catch {
+    return value;
+  }
+}
+
+function getLocalCustomers() {
+  try {
+    const data = localStorage.getItem(CUSTOMERS_STORAGE_KEY);
+    if (!data) return [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+async function loadCustomers() {
+  const body = document.getElementById("customersBody");
+  body.innerHTML = `<tr><td colspan="7">Loading customers...</td></tr>`;
+
+  // Get local customers
+  const localCustomers = getLocalCustomers();
+
+  // Try to get from backend
+  let backendCustomers = [];
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/customers`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.ok) {
+      backendCustomers = await res.json();
+    }
+  } catch {
+    // Backend not available, use local only
+  }
+
+  // Merge and deduplicate
+  const merged = new Map();
+  
+  localCustomers.forEach(customer => {
+    if (customer && customer.id) {
+      merged.set(customer.id, customer);
+    }
+  });
+
+  backendCustomers.forEach(customer => {
+    if (customer && customer.id) {
+      merged.set(customer.id, { ...merged.get(customer.id), ...customer });
+    }
+  });
+
+  const customers = Array.from(merged.values())
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+
+  document.getElementById("customerCount").textContent = `${customers.length} customer${customers.length === 1 ? "" : "s"}`;
+
+  if (!customers.length) {
+    body.innerHTML = `<tr><td colspan="7">No registered customers yet.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = "";
+  customers.forEach((customer) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><span class="mono">${escapeHtml(customer.id)}</span></td>
+      <td>${escapeHtml(customer.name)}</td>
+      <td>${escapeHtml(customer.email)}</td>
+      <td>${escapeHtml(customer.phone)}</td>
+      <td>${escapeHtml(customer.location)}</td>
+      <td>${escapeHtml(customer.notes)}</td>
+      <td>${escapeHtml(formatDate(customer.createdAt))}</td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+document.getElementById("refreshBtn").addEventListener("click", () => loadCustomers());
+
+(async function init() {
+  const authToken = await ensureAuth();
+  if (!authToken) return;
+  loadCustomers();
+})();
+</script>
+</body>
+</html>

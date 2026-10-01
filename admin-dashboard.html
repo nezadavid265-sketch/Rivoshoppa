@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin dashboard — Rivoshoppa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="api-config.js"></script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav__inner">
+    <div class="logo">
+      <span class="logo__mark" aria-hidden="true"></span>
+      Rivoshoppa admin
+    </div>
+    <div class="nav__actions">
+      <a class="btn btn--small btn--ghost" href="admin-customers.html">Customers</a>
+      <a class="btn btn--small btn--ghost" href="index.html">Back to home</a>
+      <span class="btn btn--small btn--ghost" id="logoutBtn">Log out</span>
+    </div>
+  </div>
+</header>
+
+<main class="section">
+  <p class="eyebrow">Dashboard</p>
+  <h1>Orders</h1>
+  <p class="hero__sub">Every request that's come through the site, newest first. Update a status to notify the customer automatically.</p>
+
+  <div class="dash-toolbar">
+    <span id="orderCount" class="eyebrow" style="margin:0"></span>
+    <button class="btn btn--small btn--ghost" id="refreshBtn">Refresh</button>
+  </div>
+
+  <div id="toast" class="dashboard-toast" hidden></div>
+
+  <div class="table-wrap">
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Customer</th>
+          <th>Contact</th>
+          <th>Details</th>
+          <th>Items</th>
+          <th>Route</th>
+          <th>Status</th>
+          <th>Update</th>
+        </tr>
+      </thead>
+      <tbody id="ordersBody">
+        <tr><td colspan="8">Loading orders...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<main class="section" style="padding-top: 0;">
+  <p class="eyebrow">Marketplace</p>
+  <h2>Shop catalog</h2>
+  <p class="hero__sub">Custom shops from the home page appear here and stay synced with the backend database.</p>
+
+  <div class="dash-toolbar">
+    <span id="shopCount" class="eyebrow" style="margin:0"></span>
+    <button class="btn btn--small btn--ghost" id="refreshShopsBtn">Refresh shops</button>
+  </div>
+
+  <div class="table-wrap">
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Location</th>
+          <th>Products</th>
+          <th>Seller / Owner</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="shopsBody">
+        <tr><td colspan="8">Loading shops...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<main class="section" style="padding-top: 0;">
+  <p class="eyebrow">Seller management</p>
+  <h2>Seller accounts</h2>
+  <p class="hero__sub">Review every seller application, see their contact/business information, and control account access.</p>
+  <div class="dash-toolbar">
+    <span id="sellerCount" class="eyebrow" style="margin:0"></span>
+    <button class="btn btn--small btn--ghost" id="refreshSellersBtn">Refresh sellers</button>
+  </div>
+  <div class="table-wrap">
+    <table class="orders-table">
+      <thead><tr>
+        <th>Seller</th><th>Business</th><th>Email</th><th>Phone</th><th>Location</th><th>Category</th><th>Status</th><th>Action</th>
+      </tr></thead>
+      <tbody id="sellersBody"><tr><td colspan="8">Loading sellers...</td></tr></tbody>
+    </table>
+  </div>
+</main>
+
+<main class="section" style="padding-top: 0;">
+  <p class="eyebrow">Saved delivery requests</p>
+  <h2>Customer cart saves</h2>
+  <p class="hero__sub">Items saved from the market and cart are listed here for staff to see and fulfil.</p>
+
+  <div class="table-wrap">
+    <table class="orders-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Customer</th>
+          <th>Items</th>
+          <th>Prices / Total</th>
+          <th>Pickup</th>
+          <th>Drop-off</th>
+          <th>Source</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="savedOrdersBody">
+        <tr><td colspan="8">Loading saved orders...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<script>
+const API_BASE = window.RivoshoppaApiBase;
+const ORDERS_STORAGE_KEY = "safesend_orders";
+const STATUS_STEPS = ["requested", "picked_up", "in_transit", "delivered"];
+const STATUS_LABEL = { requested: "Requested", picked_up: "Picked up", in_transit: "In transit", delivered: "Delivered" };
+const params = new URLSearchParams(window.location.search);
+const autoLogin = params.get("autologin") === "1";
+let token = sessionStorage.getItem("safesend_admin_token");
+let seenOrderIds = new Set();
+const DEMO_ORDERS = [
+  {
+    id: "SS-1001",
+    name: "Aline R.",
+    contact: "aline@example.com",
+    pickup: "Kigali, Rwanda",
+    dropoff: "Kacyiru, Rwanda",
+    items: [{ label: "Package" }],
+    status: "in_transit",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "SS-1002",
+    name: "Noah K.",
+    contact: "+250788000000",
+    pickup: "Nyamirambo",
+    dropoff: "Remera",
+    items: [{ label: "Food" }],
+    status: "requested",
+    createdAt: new Date().toISOString(),
+  },
+];
+
+async function ensureAuth() {
+  if (token) return token;
+
+  if (!autoLogin) {
+    window.location.href = "admin-login.html";
+    return null;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: "admin", password: "safesend123" }),
+    });
+
+    if (!res.ok) throw new Error("Unable to sign in automatically.");
+    const data = await res.json();
+    token = data.token;
+    sessionStorage.setItem("safesend_admin_token", token);
+    return token;
+  } catch (err) {
+    sessionStorage.removeItem("safesend_admin_token");
+    sessionStorage.removeItem("safesend_api_base");
+    window.location.href = "admin-login.html";
+    return null;
+  }
+}
+
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  try {
+    if (token) {
+      await fetch(`${API_BASE}/api/admin/logout`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    }
+  } finally {
+    sessionStorage.removeItem("safesend_admin_token");
+    window.location.href = "admin-login.html";
+  }
+});
+
+document.getElementById("refreshBtn").addEventListener("click", () => loadOrders());
+document.getElementById("refreshShopsBtn").addEventListener("click", () => loadShops());
+document.getElementById("refreshSellersBtn").addEventListener("click", () => loadSellers());
+
+function getStoredOrders() {
+  try {
+    const data = localStorage.getItem(ORDERS_STORAGE_KEY);
+    if (!data) return [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function persistOrders(orders) {
+  try {
+    localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders));
+  } catch {
+    // Ignore storage issues.
+  }
+}
+
+function checkOrdersForUpdates(orders) {
+  const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+  const now = new Date().getTime();
+  
+  return orders.map(order => {
+    const createdTime = new Date(order.createdAt || order.submittedAt || now).getTime();
+    const ageMs = now - createdTime;
+    
+    return {
+      ...order,
+      ageMs: ageMs,
+      daysOld: Math.floor(ageMs / (24 * 60 * 60 * 1000)),
+      needsUpdate: ageMs > ONE_WEEK_MS,
+      lastUpdatedAt: order.lastUpdatedAt || order.createdAt || order.submittedAt
+    };
+  });
+}
+
+function mergeOrders(localOrders, serverOrders) {
+  const merged = [...(Array.isArray(localOrders) ? localOrders : []), ...(Array.isArray(serverOrders) ? serverOrders : [])];
+  const map = new Map();
+  merged.forEach((order) => {
+    if (order && order.id) {
+      map.set(order.id, { ...(map.get(order.id) || {}), ...order });
+    }
+  });
+  return Array.from(map.values()).sort((a, b) => new Date(b.createdAt || b.submittedAt || 0) - new Date(a.createdAt || a.submittedAt || 0));
+}
+
+async function loadOrders() {
+  const body = document.getElementById("ordersBody");
+  body.innerHTML = `<tr><td colspan="8">Loading orders...</td></tr>`;
+
+  try {
+    const storedOrders = getStoredOrders();
+    const res = await fetch(`${API_BASE}/api/admin/orders`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.status === 401) {
+      sessionStorage.removeItem("safesend_admin_token");
+      const fallbackOrders = storedOrders;
+      renderOrderList(fallbackOrders, body);
+      return;
+    }
+
+    if (!res.ok) throw new Error("Failed to load orders");
+
+    const orders = await res.json();
+    const normalized = mergeOrders(storedOrders, Array.isArray(orders) ? orders : []);
+    persistOrders(normalized);
+    renderOrderList(normalized, body);
+  } catch (err) {
+    const fallbackOrders = getStoredOrders();
+    if (fallbackOrders.length > 0) {
+      renderOrderList(fallbackOrders, body);
+    } else {
+      body.innerHTML = `<tr><td colspan="8">Couldn't load orders. Is the backend running?</td></tr>`;
+    }
+  }
+}
+
+function renderOrderList(orders, body) {
+  const normalized = Array.isArray(orders) ? orders : [];
+  const withUpdateCheck = checkOrdersForUpdates(normalized);
+  resetSeenOrders(withUpdateCheck);
+  document.getElementById("orderCount").textContent = `${withUpdateCheck.length} order${withUpdateCheck.length === 1 ? "" : "s"}`;
+
+  if (withUpdateCheck.length === 0) {
+    body.innerHTML = `<tr><td colspan="8">No orders yet.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = "";
+  withUpdateCheck.forEach((order) => body.appendChild(renderRow(order)));
+}
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.hidden = false;
+  clearTimeout(showToast.timeout);
+  showToast.timeout = setTimeout(() => {
+    toast.hidden = true;
+    toast.textContent = "";
+  }, 2600);
+}
+
+function renderRow(order) {
+  const tr = document.createElement("tr");
+  const isNew = !seenOrderIds.has(order.id);
+  if (isNew) {
+    seenOrderIds.add(order.id);
+    tr.className = "order-row order-row--new";
+    showToast(`New order ${order.id} received`);
+  } else if (order.needsUpdate) {
+    tr.className = "order-row order-row--needs-update";
+  }
+
+  const itemsText = (order.items || [])
+    .map((i) => `${i.label || i.itemType || "Item"} (${formatRwf(Number(i.price || 0) * Number(i.qty || 1))})`)
+    .join(", ");
+  const orderTotal = getOrderTotal(order);
+  const customerName = order.name || order.customer?.name || "—";
+  const customerContact = order.contact || order.customer?.contact || "—";
+  const pickupText = order.pickup || order.customer?.pickup || "—";
+  const dropoffText = order.dropoff || order.customer?.dropoff || "—";
+  const detailsText = order.details || order.customer?.details || "—";
+  const createdAt = order.createdAt || order.submittedAt || "";
+  const itemTypeText = order.itemType || order.items?.[0]?.itemType || "—";
+  const sourceText = order.source || "quote";
+
+  tr.innerHTML = `
+    <td><span class="mono">${order.id}</span></td>
+    <td>${escapeHtml(customerName)}</td>
+    <td>${escapeHtml(customerContact)}</td>
+    <td></td>
+    <td>${escapeHtml(itemsText)}</td>
+    <td>${escapeHtml(pickupText)} &rarr; ${escapeHtml(dropoffText)}</td>
+    <td><span class="status-pill status-pill--${order.status}">${STATUS_LABEL[order.status]}</span></td>
+    <td></td>
+  `;
+
+  const detailCell = tr.children[3];
+  const detailHtml = [
+    `<strong>${escapeHtml(customerName)}</strong>`,
+    `<div><small>Contact:</small> ${escapeHtml(customerContact)}</div>`,
+    `<div><small>Pickup:</small> ${escapeHtml(pickupText)}</div>`,
+    `<div><small>Dropoff:</small> ${escapeHtml(dropoffText)}</div>`,
+    `<div><small>Item type:</small> ${escapeHtml(itemTypeText)}</div>`,
+    `<div><small>Order total:</small> ${escapeHtml(formatRwf(orderTotal))}</div>`,
+    `<div><small>Details:</small> ${escapeHtml(detailsText)}</div>`,
+    `<div><small>Source:</small> ${escapeHtml(sourceText)}</div>`
+  ];
+
+  if (createdAt) {
+    detailHtml.push(`<div><small>Submitted:</small> ${escapeHtml(formatDate(createdAt))}</div>`);
+    if (order.daysOld !== undefined) {
+      detailHtml.push(`<div><small>Age:</small> ${order.daysOld} day${order.daysOld === 1 ? "" : "s"} old</div>`);
+    }
+  }
+
+  // Add "Needs Update" badge for old orders
+  if (order.needsUpdate) {
+    detailHtml.push(`<div style="margin-top: 8px; padding: 8px; background: rgba(255, 185, 95, 0.2); border-left: 3px solid #ffb95f; border-radius: 4px; color: #ffe8c4;"><small>⚠️ Needs Update (7+ days old)</small></div>`);
+  }
+
+  detailCell.innerHTML = detailHtml.join("");
+
+  const select = document.createElement("select");
+  select.className = "status-select";
+  STATUS_STEPS.forEach((step) => {
+    const opt = document.createElement("option");
+    opt.value = step;
+    opt.textContent = STATUS_LABEL[step];
+    if (step === order.status) opt.selected = true;
+    select.appendChild(opt);
+  });
+  select.addEventListener("change", () => updateStatus(order.id, select.value));
+  tr.children[7].appendChild(select);
+
+  if (order.status !== "delivered") {
+    const confirmButton = document.createElement("button");
+    confirmButton.type = "button";
+    confirmButton.className = "btn btn--small";
+    confirmButton.textContent = "Confirm delivered";
+    confirmButton.addEventListener("click", async () => {
+      if (!window.confirm(`Confirm order ${order.id} was delivered to the customer?`)) return;
+      confirmButton.disabled = true;
+      confirmButton.textContent = "Saving...";
+      const updated = await updateStatus(order.id, "delivered");
+      if (!updated) {
+        confirmButton.disabled = false;
+        confirmButton.textContent = "Confirm delivered";
+      }
+    });
+    tr.children[7].appendChild(confirmButton);
+  }
+
+  return tr;
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  try {
+    return new Date(value).toLocaleString();
+  } catch {
+    return value;
+  }
+}
+
+function formatRwf(value) {
+  const amount = Number(value || 0);
+  return `${Number.isFinite(amount) ? amount.toLocaleString("en-US") : "0"} RWF`;
+}
+
+function getOrderTotal(order) {
+  if (Number.isFinite(Number(order?.total))) return Number(order.total);
+  return (Array.isArray(order?.items) ? order.items : []).reduce((sum, item) => {
+    return sum + Number(item.price || 0) * Math.max(1, Number(item.qty || 1));
+  }, 0);
+}
+
+async function updateStatus(id, status) {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/orders/${id}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) throw new Error("Update failed");
+    
+    // Update local storage to mark when the order was last updated
+    const allOrders = getStoredOrders();
+    const updatedOrders = allOrders.map(order => {
+      if (order.id === id) {
+        return {
+          ...order,
+          status: status,
+          lastUpdatedAt: new Date().toISOString(),
+          needsUpdate: false // Clear the needs update flag since we just updated it
+        };
+      }
+      return order;
+    });
+    persistOrders(updatedOrders);
+    
+    loadOrders();
+    showToast(`Order ${id} updated to ${STATUS_LABEL[status]}`);
+    return true;
+  } catch (err) {
+    alert("Couldn't update status. Please try again.");
+    return false;
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str ?? "";
+  return div.innerHTML;
+}
+
+
+async function loadSellers() {
+  const body = document.getElementById("sellersBody");
+  body.innerHTML = `<tr><td colspan="8">Loading sellers...</td></tr>`;
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/sellers`, { headers: { Authorization: `Bearer ${token}` } });
+    if (res.status === 401) { sessionStorage.removeItem("safesend_admin_token"); window.location.href="admin-login.html"; return; }
+    if (!res.ok) throw new Error("Failed to load sellers");
+    const sellers = await res.json();
+    document.getElementById("sellerCount").textContent = `${sellers.length} seller${sellers.length === 1 ? "" : "s"}`;
+    if (!sellers.length) { body.innerHTML = `<tr><td colspan="8">No seller accounts yet.</td></tr>`; return; }
+    body.innerHTML = "";
+    sellers.forEach((seller) => {
+      const tr = document.createElement("tr");
+      const actionOptions = ["pending","active","suspended","rejected"].map(status =>
+        `<option value="${status}" ${seller.status===status?"selected":""}>${status}</option>`).join("");
+      tr.innerHTML = `
+        <td><strong>${escapeHtml(seller.ownerName || "—")}</strong><br><span class="mono">${escapeHtml(seller.id || "")}</span></td>
+        <td>${escapeHtml(seller.businessName || "—")}</td>
+        <td>${escapeHtml(seller.email || "—")}</td>
+        <td>${escapeHtml(seller.phone || "—")}</td>
+        <td>${escapeHtml(seller.location || "—")}</td>
+        <td>${escapeHtml(seller.category || "—")}</td>
+        <td><select data-seller-status="${escapeHtml(seller.id)}">${actionOptions}</select></td>
+        <td><button class="btn btn--small btn--primary" data-save-seller="${escapeHtml(seller.id)}">Save</button>
+            <button class="btn btn--small btn--ghost" data-delete-seller="${escapeHtml(seller.id)}">Delete</button></td>`;
+      body.appendChild(tr);
+    });
+    body.querySelectorAll("[data-save-seller]").forEach(btn => btn.addEventListener("click", async () => {
+      const id=btn.dataset.saveSeller, select=body.querySelector(`[data-seller-status="${CSS.escape(id)}"]`);
+      btn.disabled=true;
+      try {
+        const r=await fetch(`${API_BASE}/api/admin/sellers/${encodeURIComponent(id)}/status`,{method:"PATCH",headers:{"Content-Type":"application/json",Authorization:`Bearer ${token}`},body:JSON.stringify({status:select.value})});
+        const d=await r.json(); if(!r.ok) throw new Error(d.error||"Could not update seller");
+        showToast(`Seller ${d.businessName || id} is now ${d.status}.`);
+        loadSellers();
+      } catch(e){showToast(e.message,true)} finally{btn.disabled=false;}
+    }));
+    body.querySelectorAll("[data-delete-seller]").forEach(btn => btn.addEventListener("click", async () => {
+      const id=btn.dataset.deleteSeller;
+      if(!confirm("Delete this seller account? Their shops will remain under admin ownership.")) return;
+      const r=await fetch(`${API_BASE}/api/admin/sellers/${encodeURIComponent(id)}`,{method:"DELETE",headers:{Authorization:`Bearer ${token}`}});
+      const d=await r.json(); if(!r.ok){showToast(d.error||"Delete failed",true);return;} showToast("Seller account deleted."); loadSellers(); loadShops();
+    }));
+  } catch(err) { body.innerHTML=`<tr><td colspan="8">${escapeHtml(err.message)}</td></tr>`; }
+}
+
+function resetSeenOrders(orders) {
+  const ids = new Set((orders || []).map((order) => order.id));
+  seenOrderIds = ids;
+}
+
+async function syncMarketplaceCatalogCache() {
+  try {
+    const response = await fetch(`${API_BASE}/api/shops`);
+    if (!response.ok) return;
+    const shops = await response.json();
+    if (!Array.isArray(shops)) return;
+    localStorage.setItem("safesend_market_shops", JSON.stringify(shops));
+    localStorage.setItem("safesend_market_shops_synced", "true");
+  } catch {
+    // The API mutation already succeeded; marketplace pages will refresh from the API.
+  }
+}
+
+async function loadShops() {
+  const body = document.getElementById("shopsBody");
+  body.innerHTML = `<tr><td colspan="8">Loading shops...</td></tr>`;
+
+  function getLocalShops() {
+    try {
+      const stored = JSON.parse(localStorage.getItem("safesend_market_shops") || "[]");
+      return Array.isArray(stored) ? stored : [];
+    } catch {
+      return [];
+    }
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/shops`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.status === 401) {
+      sessionStorage.removeItem("safesend_admin_token");
+      window.location.href = "admin-login.html";
+      return;
+    }
+
+    if (!res.ok) throw new Error("Failed to load shops");
+
+    const shops = await res.json();
+    const localShops = getLocalShops();
+    const serverShopIds = new Set((Array.isArray(shops) ? shops : []).map((shop) => shop.id));
+    const shopMap = new Map();
+    [...localShops, ...(Array.isArray(shops) ? shops : [])].forEach((shop) => {
+      if (shop?.id) shopMap.set(shop.id, { ...(shopMap.get(shop.id) || {}), ...shop });
+    });
+    const normalized = Array.from(shopMap.values());
+    document.getElementById("shopCount").textContent = `${normalized.length} shop${normalized.length === 1 ? "" : "s"}`;
+
+    if (!normalized.length) {
+      body.innerHTML = `<tr><td colspan="8">No shops yet.</td></tr>`;
+      return;
+    }
+
+    body.innerHTML = "";
+    normalized.forEach((shop) => {
+      const tr = document.createElement("tr");
+      const canManage = serverShopIds.has(shop.id);
+      const products = (shop.products || []).map((product) => `
+        <div class="admin-product-row">
+          <span>${escapeHtml(product.name || product.label || "Product")}${product.price ? ` · ${escapeHtml(product.price)}` : ""}</span>
+          ${canManage && product.id ? `<button class="btn btn--small btn--ghost" data-delete-product-shop="${escapeHtml(shop.id)}" data-delete-product-id="${escapeHtml(product.id)}">Remove</button>` : ""}
+        </div>
+      `).join("");
+      tr.innerHTML = `
+        <td><span class="mono">${escapeHtml(shop.id || "shop" )}</span></td>
+        <td>${escapeHtml(shop.name || "—")}</td>
+        <td>${escapeHtml(shop.category || "—")}</td>
+        <td>${escapeHtml(shop.location || "—")}</td>
+        <td>${products || "—"}</td>
+        <td>${escapeHtml(shop.ownerName || shop.sellerBusinessName || "Rivoshoppa Admin")}</td>
+        <td>${escapeHtml(shop.description || "—")}</td>
+        <td>${canManage ? `<button class="btn btn--small btn--ghost" data-delete-shop="${escapeHtml(shop.id)}">Remove shop</button>` : ""}</td>
+      `;
+      body.appendChild(tr);
+    });
+
+    body.querySelectorAll("[data-delete-product-id]").forEach((btn) => btn.addEventListener("click", async () => {
+      const shopId = btn.dataset.deleteProductShop;
+      const productId = btn.dataset.deleteProductId;
+      if (!confirm("Remove this product from the marketplace?")) return;
+      btn.disabled = true;
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/shops/${encodeURIComponent(shopId)}/products/${encodeURIComponent(productId)}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Could not remove product.");
+        await syncMarketplaceCatalogCache();
+        showToast("Product removed from the marketplace.");
+        loadShops();
+      } catch (err) {
+        showToast(err.message, true);
+        btn.disabled = false;
+      }
+    }));
+
+    body.querySelectorAll("[data-delete-shop]").forEach((btn) => btn.addEventListener("click", async () => {
+      const shopId = btn.dataset.deleteShop;
+      const shop = normalized.find((entry) => entry.id === shopId);
+      if (!confirm(`Remove ${shop?.name || "this shop"} and all its products from the marketplace?`)) return;
+      btn.disabled = true;
+      try {
+        const response = await fetch(`${API_BASE}/api/admin/shops/${encodeURIComponent(shopId)}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Could not remove shop.");
+        await syncMarketplaceCatalogCache();
+        showToast("Shop and its products removed from the marketplace.");
+        loadShops();
+      } catch (err) {
+        showToast(err.message, true);
+        btn.disabled = false;
+      }
+    }));
+  } catch (err) {
+    const fallback = getLocalShops();
+    if (fallback.length) {
+      document.getElementById("shopCount").textContent = `${fallback.length} shop${fallback.length === 1 ? "" : "s"}`;
+      body.innerHTML = "";
+      fallback.forEach((shop) => {
+        const tr = document.createElement("tr");
+        const productNames = (shop.products || []).map((product) => product.name || product.label || "Product").join(", ");
+        tr.innerHTML = `
+          <td><span class="mono">${escapeHtml(shop.id || "shop")}</span></td>
+          <td>${escapeHtml(shop.name || "—")}</td>
+          <td>${escapeHtml(shop.category || "—")}</td>
+          <td>${escapeHtml(shop.location || "—")}</td>
+          <td>${escapeHtml(productNames || "—")}</td>
+          <td>${escapeHtml(shop.ownerName || shop.sellerBusinessName || "Rivoshoppa Admin")}</td>
+          <td>${escapeHtml(shop.description || "—")}</td>
+          <td></td>
+        `;
+        body.appendChild(tr);
+      });
+    } else {
+      body.innerHTML = `<tr><td colspan="8">Couldn't load marketplace shops. Is the backend running?</td></tr>`;
+    }
+  }
+}
+
+function renderSavedOrders() {
+  const body = document.getElementById("savedOrdersBody");
+  let savedOrders = [];
+  try {
+    const parsed = JSON.parse(localStorage.getItem("safesend_saved_orders") || "[]");
+    savedOrders = Array.isArray(parsed) ? parsed : [];
+  } catch {
+    savedOrders = [];
+  }
+  const storedOrders = getStoredOrders();
+  const orderMap = new Map();
+  [...storedOrders, ...(Array.isArray(savedOrders) ? savedOrders : [])].forEach((order) => {
+    if (order?.id) orderMap.set(order.id, { ...(orderMap.get(order.id) || {}), ...order });
+  });
+  const orders = Array.from(orderMap.values());
+
+  if (!Array.isArray(orders) || orders.length === 0) {
+    body.innerHTML = `<tr><td colspan="8">No saved orders yet.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = "";
+  orders.forEach((order) => {
+    const tr = document.createElement("tr");
+    const items = Array.isArray(order.items) ? order.items.map((item) => `${item.label || item.itemType || "Item"} (${formatRwf(Number(item.price || 0) * Math.max(1, Number(item.qty || 1)))})`).join(", ") : "—";
+    const total = formatRwf(getOrderTotal(order));
+    tr.innerHTML = `
+      <td><span class="mono">${escapeHtml(order.id || "—")}</span></td>
+      <td>${escapeHtml(order.name || "—")}</td>
+      <td>${escapeHtml(items)}</td>
+      <td><strong>${escapeHtml(total)}</strong></td>
+      <td>${escapeHtml(order.pickup || "—")}</td>
+      <td>${escapeHtml(order.dropoff || "—")}</td>
+      <td>${escapeHtml(order.source || "cart")}</td>
+      <td><span class="status-pill status-pill--${order.status || "requested"}">${STATUS_LABEL[order.status || "requested"] || "Requested"}</span></td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+async function init() {
+  const authToken = await ensureAuth();
+  if (!authToken) return;
+  loadOrders();
+  loadShops();
+  renderSavedOrders();
+  setInterval(() => loadOrders(), 180000);
+  setInterval(() => loadShops(), 180000);
+  setInterval(() => renderSavedOrders(), 30000);
+}
+
+init();
+</script>
+</body>
+</html>
