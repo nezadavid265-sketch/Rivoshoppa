@@ -1,4 +1,4 @@
-pconst test = require('node:test');
+const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -14,6 +14,23 @@ test('health endpoint returns ok', async () => {
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), { status: 'ok' });
   } finally {
+    await new Promise((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
+  }
+});
+
+test('Maps config returns the configured browser API key', async () => {
+  const server = app.listen(0);
+  const originalMapsKey = process.env.GOOGLE_MAPS_API_KEY;
+  process.env.GOOGLE_MAPS_API_KEY = 'maps-browser-test-key';
+
+  try {
+    await new Promise((resolve) => server.once('listening', resolve));
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/api/maps/config`);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { apiKey: 'maps-browser-test-key' });
+  } finally {
+    if (originalMapsKey === undefined) delete process.env.GOOGLE_MAPS_API_KEY;
+    else process.env.GOOGLE_MAPS_API_KEY = originalMapsKey;
     await new Promise((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
   }
 });
@@ -49,6 +66,79 @@ test('customer registration stores a customer record', async () => {
       const customers = JSON.parse(fs.readFileSync(customersFile, 'utf8'));
       fs.writeFileSync(customersFile, JSON.stringify(customers.filter((customer) => customer.id !== createdCustomerId), null, 2));
     }
+    await new Promise((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
+  }
+});
+
+test('Google sign-in verifies the audience and only signs in approved sellers', async () => {
+  const server = app.listen(0);
+  const originalFetch = global.fetch;
+  const originalGoogleClientId = process.env.GOOGLE_CLIENT_ID;
+  const sellersFile = path.join(__dirname, '..', 'data', 'sellers.json');
+  const originalSellersFile = fs.existsSync(sellersFile) ? fs.readFileSync(sellersFile) : null;
+  const email = `google-seller-${Date.now()}@example.com`;
+  const seller = {
+    id: `GOOGLE-TEST-${Date.now()}`,
+    ownerName: 'Google Test Seller',
+    businessName: 'Google Test Shop',
+    email,
+    phone: '+250788000001',
+    location: 'Kigali',
+    category: 'Test',
+    status: 'active',
+    passwordHash: 'not-returned-to-client',
+    createdAt: new Date().toISOString(),
+  };
+  let identity = {
+    aud: 'wrong-client-id',
+    email,
+    email_verified: 'true',
+    sub: 'google-test-subject',
+  };
+
+  process.env.GOOGLE_CLIENT_ID = 'google-client-test-id';
+  const sellers = originalSellersFile ? JSON.parse(originalSellersFile) : [];
+  sellers.push(seller);
+  fs.writeFileSync(sellersFile, JSON.stringify(sellers, null, 2));
+  global.fetch = async (input, ...args) => {
+    if (String(input).startsWith('https://oauth2.googleapis.com/tokeninfo')) {
+      return new Response(JSON.stringify(identity), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+    return originalFetch(input, ...args);
+  };
+
+  try {
+    await new Promise((resolve) => server.once('listening', resolve));
+    const baseUrl = `http://127.0.0.1:${server.address().port}`;
+    const configResponse = await originalFetch(`${baseUrl}/api/auth/google/config`);
+    assert.deepEqual(await configResponse.json(), { clientId: 'google-client-test-id' });
+
+    const signIn = () => originalFetch(`${baseUrl}/api/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: 'test-id-token', role: 'seller' }),
+    });
+    assert.equal((await signIn()).status, 401);
+
+    identity.aud = 'google-client-test-id';
+    const response = await signIn();
+    assert.equal(response.status, 200);
+    const payload = await response.json();
+    assert.ok(payload.token);
+    assert.equal(payload.seller.email, email);
+    assert.equal(payload.seller.businessName, 'Google Test Shop');
+    assert.equal('passwordHash' in payload.seller, false);
+
+    const pendingIdentity = { ...identity, email: `pending-${email}` };
+    identity = pendingIdentity;
+    fs.writeFileSync(sellersFile, JSON.stringify([...sellers, { ...seller, id: `${seller.id}-PENDING`, email: pendingIdentity.email, status: 'pending' }], null, 2));
+    assert.equal((await signIn()).status, 403);
+  } finally {
+    global.fetch = originalFetch;
+    if (originalGoogleClientId === undefined) delete process.env.GOOGLE_CLIENT_ID;
+    else process.env.GOOGLE_CLIENT_ID = originalGoogleClientId;
+    if (originalSellersFile === null) fs.rmSync(sellersFile, { force: true });
+    else fs.writeFileSync(sellersFile, originalSellersFile);
     await new Promise((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
   }
 });

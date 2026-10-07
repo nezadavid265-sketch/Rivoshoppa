@@ -552,5 +552,526 @@
       "dropoff": "Rubavu",
       "details": "Gift package"
     }
+  },
+  {
+    "id": "SS-2864",
+    "name": "Aline Uwase",
+    "contact": "aline@example.com",
+    "pickup": "Kigali",
+    "dropoff": "Rubavu",
+    "details": "Gift package",
+    "items": [
+      {
+        "itemType": "package",
+        "label": "Package delivery",
+        "price": 8000,
+        "qty": 1
+      },
+      {
+        "itemType": "delivery",
+        "label": "Standard delivery",
+        "price": 1000,
+        "qty": 1,
+        "source": "delivery"
+      }
+    ],
+    "total": 9000,
+    "paymentMethod": "cash_on_delivery",
+    "paymentPhone": "",
+    "paymentStatus": "confirmed",
+    "paymentReference": "PAY-SS-6022-1790852095637-8305",
+    "status": "requested",
+    "history": [
+      {
+        "status": "requested",
+        "at": "2026-10-01T10:54:55.640Z"
+      }
+    ],
+    "createdAt": "2026-10-01T10:54:55.640Z",
+    "source": "cart",
+    "submittedAt": "2026-10-01T10:54:55.640Z",
+    "customer": {
+      "name": "Aline Uwase",
+      "contact": "aline@example.com",
+      "pickup": "Kigali",
+      "dropoff": "Rubavu",
+      "details": "Gift package"
+    }
+  },
+  {
+    "id": "SS-6684",
+    "name": "Aline Uwase",
+    "contact": "aline@example.com",
+    "pickup": "Kigali",
+    "dropoff": "Rubavu",
+    "details": "Gift package",
+    "items": [
+      {
+        "itemType": "package",
+        "label": "Package delivery",
+        "price": 8000,
+        "qty": 1
+      },
+      {
+        "itemType": "delivery",
+        "label": "Standard delivery",
+        "price": 1000,
+        "qty": 1,
+        "source": "delivery"
+      }
+    ],
+    "total": 9000,
+    "paymentMethod": "cash_on_delivery",
+    "paymentPhone": "",
+    "paymentStatus": "confirmed",
+    "paymentReference": "PAY-SS-5942-1790852117464-8606",
+    "status": "requested",
+    "history": [
+      {
+        "status": "requested",
+        "at": "2026-10-01T10:55:17.465Z"
+      }
+    ],
+    "createdAt": "2026-10-01T10:55:17.465Z",
+    "source": "cart",
+    "submittedAt": "2026-10-01T10:55:17.465Z",
+    "customer": {
+      "name": "Aline Uwase",
+      "contact": "aline@example.com",
+      "pickup": "Kigali",
+      "dropoff": "Rubavu",
+      "details": "Gift package"
+    }
+  },
+  {
+    "id": "SS-4636",
+    "name": "Aline Uwase",
+    "contact": "aline@example.com",
+    "pickup": "Kigali",
+    "dropoff": "Rubavu",
+    "details": "Gift package",
+    "items": [
+      {
+        "itemType": "package",
+        "label": "Package delivery",
+        "price": 8000,
+        "qty": 1
+      },
+      {
+        "itemType": "delivery",
+        "label": "Standard delivery",
+        "price": 1000,
+        "qty": 1,
+        "source": "delivery"
+      }
+    ],
+    "total": 9000,
+    "paymentMethod": "cash_on_delivery",
+    "paymentPhone": "",
+    "paymentStatus": "confirmed",
+    "paymentReference": "PAY-SS-4958-1790852133395-6152",
+    "status": "requested",
+    "history": [
+      {
+        "status": "requested",
+        "at": "2026-10-01T10:55:33.396Z"
+      }
+    ],
+    "createdAt": "2026-10-01T10:55:33.396Z",
+    "source": "cart",
+    "submittedAt": "2026-10-01T10:55:33.396Z",
+    "customer": {
+      "name": "Aline Uwase",
+      "contact": "aline@example.com",
+      "pickup": "Kigali",
+      "dropoff": "Rubavu",
+      "details": "Gift package"
+    }
+  },
+  {
+    "id": "SS-5375",
+    "name": "Aline Uwase",
+    "contact": "aline@example.com",
+    "pickup": "Kigali",
+    "dropoff": "Rubavu",
+    "details": "Gift package",
+    "items": [
+      {
+        "itemType": "package",
+        "label": "Package delivery",
+        "price": 8000,
+        "qty": 1
+      },
+      {
+        "itemType": "delivery",
+        "label": "Standard delivery",
+        "price": 1000,
+        "qty": 1,
+        "source": "delivery"
+      }
+    ],
+    "total": 9000,
+    "paymentMethod": "cash_on_delivery",
+    "paymentPhone": "",
+    "paymentStatus": "confirmed",
+    "paymentReference": "PAY-SS-5643-1790947208384-6491",
+    "status": "requested",
+    "history": [
+      {
+        "status": "requested",
+        "at": "2026-10-02T13:20:08.385Z"
+      }
+    ],
+    "createdAt": "2026-10-02T13:20:08.385Z",
+    "source": "cart",
+    "submittedAt": "2026-10-02T13:20:08.385Z",
+    "customer": {
+      "name": "Aline Uwase",
+      "contact": "aline@example.com",
+      "pickup": "Kigali",
+      "dropoff": "Rubavu",
+      "details": "Gift package"
+    }
+  },
+  {
+    "id": "SS-3294",
+    "name": "Aline Uwase",
+    "contact": "aline@example.com",
+    "pickup": "Kigali",
+    "dropoff": "Rubavu",
+    "details": "Gift package",
+    "items": [
+      {
+        "itemType": "package",
+        "label": "Package delivery",
+        "price": 8000,
+        "qty": 1
+      },
+      {
+        "itemType": "delivery",
+        "label": "Standard delivery",
+        "price": 1000,
+        "qty": 1,
+        "source": "delivery"
+      }
+    ],
+    "total": 9000,
+    "paymentMethod": "cash_on_delivery",
+    "paymentPhone": "",
+    "paymentStatus": "confirmed",
+    "paymentReference": "PAY-SS-3157-1790947263895-5905",
+    "status": "requested",
+    "history": [
+      {
+        "status": "requested",
+        "at": "2026-10-02T13:21:03.896Z"
+      }
+    ],
+    "createdAt": "2026-10-02T13:21:03.896Z",
+    "source": "cart",
+    "submittedAt": "2026-10-02T13:21:03.896Z",
+    "customer": {
+      "name": "Aline Uwase",
+      "contact": "aline@example.com",
+      "pickup": "Kigali",
+      "dropoff": "Rubavu",
+      "details": "Gift package"
+    }
+  },
+  {
+    "id": "SS-6952",
+    "name": "Aline Uwase",
+    "contact": "aline@example.com",
+    "pickup": "Kigali",
+    "dropoff": "Rubavu",
+    "details": "Gift package",
+    "items": [
+      {
+        "itemType": "package",
+        "label": "Package delivery",
+        "price": 8000,
+        "qty": 1
+      },
+      {
+        "itemType": "delivery",
+        "label": "Standard delivery",
+        "price": 1000,
+        "qty": 1,
+        "source": "delivery"
+      }
+    ],
+    "total": 9000,
+    "paymentMethod": "cash_on_delivery",
+    "paymentPhone": "",
+    "paymentStatus": "confirmed",
+    "paymentReference": "PAY-SS-8239-1790947845689-4558",
+    "status": "requested",
+    "history": [
+      {
+        "status": "requested",
+        "at": "2026-10-02T13:30:45.695Z"
+      }
+    ],
+    "createdAt": "2026-10-02T13:30:45.695Z",
+    "source": "cart",
+    "submittedAt": "2026-10-02T13:30:45.695Z",
+    "customer": {
+      "name": "Aline Uwase",
+      "contact": "aline@example.com",
+      "pickup": "Kigali",
+      "dropoff": "Rubavu",
+      "details": "Gift package"
+    }
+  },
+  {
+    "id": "SS-8536",
+    "name": "Aline Uwase",
+    "contact": "aline@example.com",
+    "pickup": "Kigali",
+    "dropoff": "Rubavu",
+    "details": "Gift package",
+    "items": [
+      {
+        "itemType": "package",
+        "label": "Package delivery",
+        "price": 8000,
+        "qty": 1
+      },
+      {
+        "itemType": "delivery",
+        "label": "Standard delivery",
+        "price": 1000,
+        "qty": 1,
+        "source": "delivery"
+      }
+    ],
+    "total": 9000,
+    "paymentMethod": "cash_on_delivery",
+    "paymentPhone": "",
+    "paymentStatus": "confirmed",
+    "paymentReference": "PAY-SS-3940-1790948303692-2043",
+    "status": "delivered",
+    "history": [
+      {
+        "status": "requested",
+        "at": "2026-10-02T13:38:23.696Z"
+      },
+      {
+        "status": "delivered",
+        "at": "2026-10-07T14:57:50.480Z"
+      }
+    ],
+    "createdAt": "2026-10-02T13:38:23.696Z",
+    "source": "cart",
+    "submittedAt": "2026-10-02T13:38:23.696Z",
+    "customer": {
+      "name": "Aline Uwase",
+      "contact": "aline@example.com",
+      "pickup": "Kigali",
+      "dropoff": "Rubavu",
+      "details": "Gift package"
+    }
+  },
+  {
+    "id": "SS-6653",
+    "name": "Aline Uwase",
+    "contact": "aline@example.com",
+    "pickup": "Kigali",
+    "dropoff": "Rubavu",
+    "details": "Gift package",
+    "items": [
+      {
+        "itemType": "package",
+        "label": "Package delivery",
+        "price": 8000,
+        "qty": 1
+      },
+      {
+        "itemType": "delivery",
+        "label": "Standard delivery",
+        "price": 1000,
+        "qty": 1,
+        "source": "delivery"
+      }
+    ],
+    "total": 9000,
+    "paymentMethod": "cash_on_delivery",
+    "paymentPhone": "",
+    "paymentStatus": "confirmed",
+    "paymentReference": "PAY-SS-6945-1791024005954-3966",
+    "status": "requested",
+    "history": [
+      {
+        "status": "requested",
+        "at": "2026-10-03T10:40:05.955Z"
+      }
+    ],
+    "createdAt": "2026-10-03T10:40:05.955Z",
+    "source": "cart",
+    "submittedAt": "2026-10-03T10:40:05.955Z",
+    "customer": {
+      "name": "Aline Uwase",
+      "contact": "aline@example.com",
+      "pickup": "Kigali",
+      "dropoff": "Rubavu",
+      "details": "Gift package"
+    }
+  },
+  {
+    "id": "SS-3831",
+    "name": "Muhoza Bruno",
+    "contact": "muhozabruno02@gmail.com",
+    "pickup": "Kigali",
+    "dropoff": "Kicukiro",
+    "details": "20min",
+    "items": [
+      {
+        "itemType": "delivery",
+        "label": "Standard delivery",
+        "price": 1000,
+        "qty": 1,
+        "source": "delivery"
+      },
+      {
+        "id": "market-fruit-box",
+        "itemType": "Fruit Box",
+        "label": "Fruit Box",
+        "price": 4800,
+        "qty": 2,
+        "source": "marketplace",
+        "marketId": "fruit-box",
+        "marketCategory": "Groceries"
+      },
+      {
+        "id": "market-fresh-juice",
+        "itemType": "Fresh Juice",
+        "label": "Fresh Juice",
+        "price": 3000,
+        "qty": 1,
+        "source": "marketplace",
+        "marketId": "fresh-juice",
+        "marketCategory": "Restaurants"
+      }
+    ],
+    "total": 13600,
+    "paymentMethod": "mtn_mobile_money",
+    "paymentPhone": "+250791322129",
+    "paymentStatus": "pending",
+    "paymentReference": "PAY-SS-8238-1791024330807-7980",
+    "status": "delivered",
+    "history": [
+      {
+        "status": "requested",
+        "at": "2026-10-03T10:45:30.813Z"
+      },
+      {
+        "status": "delivered",
+        "at": "2026-10-03T10:46:27.550Z"
+      }
+    ],
+    "createdAt": "2026-10-03T10:45:30.813Z",
+    "source": "cart",
+    "submittedAt": "2026-10-03T10:45:30.726Z",
+    "customer": {
+      "name": "Muhoza Bruno",
+      "contact": "muhozabruno02@gmail.com",
+      "pickup": "Kigali",
+      "dropoff": "Kicukiro",
+      "details": "20min"
+    }
+  },
+  {
+    "id": "SS-7904",
+    "name": "Aline Uwase",
+    "contact": "aline@example.com",
+    "pickup": "Kigali",
+    "dropoff": "Rubavu",
+    "details": "Gift package",
+    "items": [
+      {
+        "itemType": "package",
+        "label": "Package delivery",
+        "price": 8000,
+        "qty": 1
+      },
+      {
+        "itemType": "delivery",
+        "label": "Standard delivery",
+        "price": 1000,
+        "qty": 1,
+        "source": "delivery"
+      }
+    ],
+    "total": 9000,
+    "paymentMethod": "cash_on_delivery",
+    "paymentPhone": "",
+    "paymentStatus": "confirmed",
+    "paymentReference": "PAY-SS-1291-1791025444940-4748",
+    "status": "requested",
+    "history": [
+      {
+        "status": "requested",
+        "at": "2026-10-03T11:04:04.940Z"
+      }
+    ],
+    "createdAt": "2026-10-03T11:04:04.940Z",
+    "source": "cart",
+    "submittedAt": "2026-10-03T11:04:04.941Z",
+    "customer": {
+      "name": "Aline Uwase",
+      "contact": "aline@example.com",
+      "pickup": "Kigali",
+      "dropoff": "Rubavu",
+      "details": "Gift package"
+    }
+  },
+  {
+    "id": "SS-3934",
+    "name": "Aline Uwase",
+    "contact": "aline@example.com",
+    "pickup": "Kigali",
+    "dropoff": "Rubavu",
+    "details": "Gift package",
+    "items": [
+      {
+        "itemType": "package",
+        "label": "Package delivery",
+        "price": 8000,
+        "qty": 1
+      },
+      {
+        "itemType": "delivery",
+        "label": "Standard delivery",
+        "price": 1000,
+        "qty": 1,
+        "source": "delivery"
+      }
+    ],
+    "total": 9000,
+    "paymentMethod": "cash_on_delivery",
+    "paymentPhone": "",
+    "paymentStatus": "confirmed",
+    "paymentReference": "PAY-SS-5730-1791025477022-6268",
+    "status": "delivered",
+    "history": [
+      {
+        "status": "requested",
+        "at": "2026-10-03T11:04:37.022Z"
+      },
+      {
+        "status": "delivered",
+        "at": "2026-10-07T13:38:39.184Z"
+      }
+    ],
+    "createdAt": "2026-10-03T11:04:37.022Z",
+    "source": "cart",
+    "submittedAt": "2026-10-03T11:04:37.022Z",
+    "customer": {
+      "name": "Aline Uwase",
+      "contact": "aline@example.com",
+      "pickup": "Kigali",
+      "dropoff": "Rubavu",
+      "details": "Gift package"
+    }
   }
 ]

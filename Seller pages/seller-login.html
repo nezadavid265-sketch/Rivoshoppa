@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seller Login — Rivoshoppa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="api-config.js"></script>
+</head>
+<body>
+<main class="login-screen">
+  <div class="login-card">
+    <div class="logo" style="margin-bottom:24px"><span class="logo__mark"></span> Rivoshoppa seller</div>
+    <p class="eyebrow">Seller portal</p><h1 style="font-size:1.7rem">Sign in to your shop</h1>
+    <p class="hero__sub" style="font-size:.95rem">Manage your shop and products from one account.</p>
+    <form id="loginForm" novalidate>
+      <div class="field"><label>Email</label><input id="email" type="email" required autocomplete="username" placeholder="seller@example.com"></div>
+      <div class="field" style="margin-top:14px"><label>Password</label><input id="password" type="password" required autocomplete="current-password" placeholder="Your password"></div>
+      <button class="btn btn--primary" id="loginBtn" style="width:100%;margin-top:20px">Sign in</button>
+      <p class="form-status" id="status" role="status"></p>
+    </form>
+    <div style="display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:.85rem"><span style="height:1px;background:var(--line);flex:1"></span><span>or sign in with</span><span style="height:1px;background:var(--line);flex:1"></span></div>
+    <div id="googleButton" style="display:flex;justify-content:center;min-height:40px"></div>
+    <p class="form-status" id="googleStatus" role="status" aria-live="polite"></p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px">
+      <a class="btn btn--small btn--ghost" href="seller-register.html">Become a seller</a>
+      <a class="btn btn--small btn--ghost" href="index.html">Back to shopping</a>
+    </div>
+  </div>
+</main>
+<script>
+const API_BASE=window.RivoshoppaApiBase;
+const form=document.getElementById('loginForm'), status=document.getElementById('status'), btn=document.getElementById('loginBtn');
+const googleStatus=document.getElementById('googleStatus');
+async function readJson(response){const text=await response.text();try{return text?JSON.parse(text):{};}catch{throw new Error(`Server returned ${response.status} without a valid response.`);}}
+form.addEventListener('submit',async e=>{
+ e.preventDefault(); btn.disabled=true; btn.textContent='Signing in...'; status.textContent='';
+ try{
+  const r=await fetch(`${API_BASE}/api/seller/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:form.email.value,password:form.password.value})});
+  const d=await readJson(r); if(!r.ok) throw new Error(d.error||'Login failed.');
+  sessionStorage.setItem('rivoshoppa_seller_token',d.token); sessionStorage.setItem('rivoshoppa_seller',JSON.stringify(d.seller));
+  location.href='seller-dashboard.html';
+ }catch(err){status.textContent=err.message;status.dataset.state='error';}
+ finally{btn.disabled=false;btn.textContent='Sign in';}
+});
+async function signInWithGoogle(response){
+ googleStatus.textContent='Verifying your Google account...';googleStatus.dataset.state='';
+ try{
+  const r=await fetch(`${API_BASE}/api/auth/google`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({credential:response.credential,role:'seller'})});
+  const d=await readJson(r);if(!r.ok)throw new Error(d.error||'Google sign-in failed.');
+  sessionStorage.setItem('rivoshoppa_seller_token',d.token);sessionStorage.setItem('rivoshoppa_seller',JSON.stringify(d.seller));location.href='seller-dashboard.html';
+ }catch(err){googleStatus.textContent=err.message;googleStatus.dataset.state='error';}
+}
+async function setupGoogleSignIn(){
+ try{
+  const config=await fetch(`${API_BASE}/api/auth/google/config`).then(readJson);
+  if(!config.clientId){googleStatus.textContent='Google sign-in is not configured yet.';googleStatus.dataset.state='error';return;}
+  const script=document.createElement('script');script.src='https://accounts.google.com/gsi/client';script.async=true;script.onload=()=>{
+   google.accounts.id.initialize({client_id:config.clientId,callback:signInWithGoogle});
+   google.accounts.id.renderButton(document.getElementById('googleButton'),{theme:'outline',size:'large',text:'signin_with',shape:'rect',width:320});
+  };script.onerror=()=>{googleStatus.textContent='Google sign-in could not be loaded.';googleStatus.dataset.state='error';};document.head.appendChild(script);
+ }catch{googleStatus.textContent='Google sign-in could not be loaded.';googleStatus.dataset.state='error';}
+}
+setupGoogleSignIn();
+if(sessionStorage.getItem('rivoshoppa_seller_token')) location.href='seller-dashboard.html';
+</script>
+</body></html>
